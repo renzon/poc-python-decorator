@@ -3,7 +3,7 @@ Project to Analyse Java Annotation and compare it with Python Decorator
 
 This project is using Python 3.5
 
-## Case 2: Decorator which does nothing
+## Case 1: Decorator which does nothing
 
 Let's suppose the need for marking methods and only listing their names.
 A Decorator can be used for that. 
