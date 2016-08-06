@@ -51,7 +51,7 @@ Given a decorator `d` and a function `f`, `f = d(f)` has exactly same effect as:
 ```python
 @d
 def f() :
-   'f's body'
+   "f's body"
 ```
 
 ### Listing Annotated Methods
@@ -90,16 +90,61 @@ Not Marked
 
 ## Case 2: Annotation which does something
 
-A micro framework to measure methods running time can be accomplished using previous approach.
-The difference int this case is the annotated methods execution.
+A micro framework to measure functions running time can be accomplished using previous approach.
+The difference is that Decorator return now need to be another function.
+This new function, `wrapper`, will measure the time:
 
-So first the marking Annotation can be created:
+```python
+from time import clock
 
-```java
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Timing {}
+
+def timing(func):
+    def wrapper(*args, **kwargs):
+        begin = clock()
+        ret = func(*args, **kwargs)
+        elapsed = clock() - begin
+        elapsed * 1000  # transforming im ms
+        print("Function %s executed in %s ms" % (func.__name__, elapsed))
+        return ret
+
+    return wrapper
 ```
+
+Worth mentioning that `wrapper` is not aware of `func`.
+So it define e variable number of arguments: `*args, **kwargs`.
+
+Testing de timing function:
+
+```python
+from timing.timer import timing
+
+
+@timing
+def count():
+    for i in range(1000):
+        print(i)
+
+
+if __name__ == '__main__':
+    count()
+    print(count.__name__)
+
+
+# Output
+...
+997
+998
+999
+Function count executed in 0.003266999999999999 ms
+wrapper
+```
+
+Different from Java, the `count` reference is changed at import time.
+It holds the value of `wrapper`, a inner function of `timing`.
+
+But this approach has a drawback: it has changes the original function name.
+Once this an effect not desired there is a built in library to fix it.
+So the :
 
 A class using `Timing`can be also created:
 
