@@ -1,7 +1,9 @@
+from functools import wraps
 from time import clock
 
 
 def timing(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         begin = clock()
         ret = func(*args, **kwargs)

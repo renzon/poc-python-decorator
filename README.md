@@ -54,7 +54,7 @@ def f() :
    "f's body"
 ```
 
-### Listing Annotated Methods
+### Listing Decorated Functions
 
 So to list marked functions names:
 
@@ -144,70 +144,37 @@ It holds the value of `wrapper`, a inner function of `timing`.
 
 But this approach has a drawback: it has changes the original function name.
 Once this an effect not desired there is a built in library to fix it.
-So the :
+So the `wraps`decorator is used:
 
-A class using `Timing`can be also created:
+```python
+from functools import wraps
+from time import clock
 
-```java
-public class Counter {
-	@Timing
-	public void count() {
-		for (int i = 0; i < 1000; ++i) {
-			System.out.println(i);
-		}
-	}
-}
+
+def timing(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        begin = clock()
+        ret = func(*args, **kwargs)
+        elapsed = clock() - begin
+        elapsed * 1000  # transforming im ms
+        print("Function %s executed in %s ms" % (func.__name__, elapsed))
+        return ret
+
+    return wrapper
 ```
 
-It's important noting that just like the first case, `count` methods isn't modified:
+So the output now show the original function name:
 
-```java
-public static void main(String[] args) {
-    new Counter().count();
-}
-```
-
-Output:
-```
-...
+``
 997
 998
 999
-```
-So to calculate execution time a processing class must be developed:
-
-```java
-public class TimingRunner {
-	public static void time(Object obj)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		for (Method m : obj.getClass().getMethods()) {
-			if (m.isAnnotationPresent(Timing.class)) {
-				long begin = new Date().getTime();
-				m.invoke(obj);
-				long end = new Date().getTime();
-				System.out.println("Method " + m.getName() + " Executed in " + (end - begin) + "ms");
-			}
-		}
-	}
-
-	public static void main(String[] args)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		time(new Counter());
-	}
+Function count executed in 0.002604999999999996 ms
+count
 ```
 
-Now before executing `count` initial time is kept in `begin` variable. 
-After its execution elapsed time is calculate and printed:
- 
-```
-...
-997
-998
-999
-Method count Executed in 14ms
-```
-
-# Annotation Framework
+# Decorator Framework
 
 Several frameworks use Annotations as base for extension points.
 So a Proof of Concept will be implemented to illustrate this.
