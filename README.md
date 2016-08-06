@@ -1,7 +1,7 @@
 # poc-python-decorator
 Project to Analyse Java Annotation and compare it with Python Decorator
 
-This project is using Python 3
+This project is using Python 3.5
 
 ## Case 1: Annotation which does nothing
 
@@ -473,6 +473,7 @@ Automatic Maaping          | Yes, but module must be imported | No, class scan n
 Unrestricted params        | Yes                              | No, can't define var args and general classes
 Param keep code simple     | No, extra level of function      | Yes, only add attribute call
 Exec. independent of order | No                               | Yes
+Keep target integrety      | No, need fix with wraps          | Yes
 # of methods \*            | | 10
 Lines of Code \*\*         | | 187
 
