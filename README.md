@@ -3,104 +3,90 @@ Project to Analyse Java Annotation and compare it with Python Decorator
 
 This project is using Python 3.5
 
-## Case 1: Annotation which does nothing
+## Case 2: Decorator which does nothing
 
-In fact it is in Annotation definition not doing anything. 
-Its purpose is supplying code with metadata.
+Let's suppose the need for marking methods and only listing their names.
+A Decorator can be used for that. 
 
-Let's suppose the need for marking methods and only listing their names. 
 
-### Creating Annotation Mark
+### Creating Decorator mark
 
-```java
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Mark {}
+Decorator is a regular function.
+But it receives another function as parameter, so it is a high order function:
+
+```python
+_marked = []
+
+def mark(func):
+    _marked.append(func)
+    return func
 ```
+### Decorating Functions
 
-It's interesting note that a Annotation `Mark` uses another Annotations to define 
-if it is going to be available at runtime (`Retention`) and that its targets are methods (`Target`).
-More than been verbose the code is kind of a paradox because `Retention` annotates itself:
+So `mark` can be used to mark functions/methods/classes:
 
-```java
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.ANNOTATION_TYPE)
-public @interface Retention { // omiting code here }
-```
+```python
+from mark.decorator import mark
 
-More than that Annotation introduce a new citizen on Java language, with new sintax e behavior.
-For example it doesn't allow Inheritance like a regular Class. 
 
-### Annotating Methods
+def marked_1():
+    print('Marked 1')
 
-With `Mark` done, it can be used to add metadata:
 
-```java
-public class Marked {
-	@Mark
-	public void marked1() {
-		System.out.println("Marked 1");
-	}
+marked_1 = mark(marked_1)
 
-	@Mark
-	public void marked2() {
-		System.out.println("Marked 2");
-	}
 
-	public void notMarked() {
-		System.out.println("Not Marked");
-	}
-}
-```
+@mark
+def marked_2():
+    print('Marked 1')
 
-It's important notice again that annotated methods don't do anything special.
-Calling `Marked` methods has a regular output:
 
-```java
-public static void main(String[] args) {
-    Marked m=new Marked();
-    m.marked1();
-    m.marked2();
-    m.notMarked();
-}
+def not_marked():
+    print('Not Marked')
+``` 
 
-Output:
+It's important notice from above code that `@` is only syntactic sugar.
+Given a decorator `d` and a function `f`, `f = d(f)` has exactly same effect as:
 
-Marked 1
-Marked 2
-Not Marked
+```python
+@d
+def f() :
+   'f's body'
 ```
 
 ### Listing Annotated Methods
 
-Listing the Annotated methods is possible by reading metatada through Java Reflection API.
-In this example nothing will be executed. 
-Annotated methods will only have their names printed:
+So to list marked functions names:
 
-```java
-public class Main {
-	public static void main(String[] args) {
-		printMarked(Marked.class);
-	}
+```python
+from mark import decorator
+# Need only be imported to mark functions/methods
+from mark import marked
 
-	private static void printMarked(Class<?> cls) {
-		Arrays.asList(cls.getMethods()).stream()
-            .filter(m -> m.isAnnotationPresent(Mark.class))
-            .map(m -> m.getName())
-            .forEach(System.out::println);
-	}
-}
+if __name__ == '__main__':
+    for f in decorator._marked:
+        print(f.__name__)
+
+# Output
+marked_1
+marked_2
 ```
 
-Output:
+Worth mentioning that functions keep their usual behavior:
 
-```
-marked1
-marked2
-```
+```python
+from mark import marked
 
-So the conclusion on this section is that Annotation and Processing are two completely differently things.
+if __name__ == '__main__':
+    marked.marked_1()
+    marked.marked_2()
+    marked.not_marked()
+    
+# Output
+Marked 1
+Marked 1
+Not Marked
+```
 
 ## Case 2: Annotation which does something
 
