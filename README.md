@@ -84,7 +84,7 @@ if __name__ == '__main__':
     
 # Output
 Marked 1
-Marked 1
+Marked 2
 Not Marked
 ```
 
