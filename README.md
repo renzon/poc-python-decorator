@@ -176,125 +176,53 @@ count
 
 # Decorator Framework
 
-Several frameworks use Annotations as base for extension points.
+Several frameworks use Decorator as base for extension points.
 So a Proof of Concept will be implemented to illustrate this.
 Thus a simple version of server routing and security is going to be developed on next sections.
 
 ## Receiving parameters
 
 Routing configuration is a common problem that every web framework must deal with.
-Some of them use Annotation to configure paths to which a method should respond.
-So the first step, again, is creating a Annotation.
-But this time it needs defining tha paths:
+Some of them use Decorator to configure paths to which a method should respond.
+So the first step, again, is creating a Decorator.
+But this time it needs to receive paths as parameters:
 
-```java
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Route {
-	String[] value();
-}
-```
+```python
+_routes = {}
 
-It's imporant noticing the definition of `value`.
-The sintax is different from a class attribute.
-It seems line a method execution (`value()`), but it isn't.
-Now it can be used to annotate methods:
 
-```java
-public class RouteExample {
-	@Route("/")
-	public void root() {
-		System.out.println("Acessing root of Example");
-	}
+def route(*paths):
+    def decorator(func):
+        for p in paths:
+            _routes[p] = func
+        return func
 
-	@Route({ "/user", "/usr" })
-	public void user(String username) {
-		System.out.println("Acessing user of Example");
-		System.out.println("Username: " + username);
-	}
-}
-```
+    return decorator
 
-The difference now it that `Route` receives a parameter which is hold by `value`
-Four facts worth mentioning:
 
-1. Besides values been a String array (`String[]`) on `root` a simple string `"/"`is given as parameter.
- In one hand it makes code simples once it isn't necessary wrapping unitary parameter as array: `{"/"}`.
- But on the other hand it violates the supposed strong Java typing.
-2. An annotation attribute can have any name.
- But if one different from `value` is chosen its name can't be omitted when passing parameter. 
- For example, if `paths` was the attribute's name, then annotated methods should be:
- 
- ```java
-  @Route(paths="/")
-  public void root() {
-		System.out.println("Acessing root of Example");
-  }
- ```
-3. Using a var args would be more consistent for values, but Java currently doesn't accept it on Annotations.
-4. Only primitives, String, Class, Enum, Annotation or array of these types can be used as attributes.
- Thus no customized user objects allowed.
-
-## Mapping paths to methods
-
-Once `Router`is in place an Interface for a simple web service is defined:
-
-```java
-public interface Server {
-	void execute(String path, String... params);
-
-	void scan(Class<?> cls);
-
-	void addSecurity(Class<? extends Annotation> cls, Class<? extends Securitizable> sec);
-}
-```
-
-The first important method is `scan`.
-It's purpose is scanning classes and mapping annotated methods to their paths.
-An instance is created so Executor keep references to object and its method for further execution:
-
-```java
-Route routeAnnotation = m.getAnnotation(Route.class);
-if (routeAnnotation != null) {
-    String[] paths = routeAnnotation.value();
-    try {
-
-        Object target = cls.newInstance();
-        Executor executor = new Executor(target, m);
-        for (String path : paths) {
-            routes.put(path, executor);
-        }
-    } catch (Exception e) {}
-}
-```
-With mapped paths server can be used to delegate execution to annotated methods.
-Thus Routing is the first extension point of Server's Proof of Concept:
-
-```java
-public static void main(String[] args) {
-    Server server = new ServerImpl();
-    // Scan could be done by libs, but keeping it simple
-    server.scan(RouteExample.class);
-    // Executing paths
-    server.execute("/");
-    server.execute("/user", "Manager");
-    server.execute("/usr", "Admin");
-    server.execute("/notexisting");
-}
-
-// Results:
-
+def execute(path, *args, **kwargs):
+    print('Receiving Request on path: %s' % path)
+    if path not in _routes:
+        print('404 page not Found')
+        return 
+    _routes[path](*args, **kwargs)
+    
+#Output    
 Receiving Request on path: /
 Acessing root of Example
 Receiving Request on path: /user
-Acessing user of Example
+Accessing user of Example
 Username: Manager
 Receiving Request on path: /usr
-Acessing user of Example
+Accessing user of Example
 Username: Admin
 Receiving Request on path: /notexisting
-404: Page not Found
+404 page not Found    
 ```
+
+It's important noticing an extra function is created to receive path parameters.
+So inside `route` the decorator itself is created and returned to be applied on target functions.
+Once it returns `func`, there is no need to use `wraps` on this case.  
 	
 ## Security
 
