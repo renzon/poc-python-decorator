@@ -226,164 +226,79 @@ Once it returns `func`, there is no need to use `wraps` on this case.
 	
 ## Security
 
-Security issue differs from previous because it modifies execution flow.
-The mains idea is provide an extension point so framework users can plug their own Annotations and security handlers.
-So an Interface is created to handle security:
+Security can be solved mixing Decorator with params and generating a new function.
+This is the most complex one:
 
-```java
-public interface Securitizable {
-	void check(String path, String... params) throws SecurityException;
-	void extracParams(Annotation a);
-}
+```python
+from functools import wraps
+
+
+def restricted_to(*groups):
+    allowed_groups = set(groups)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if 'group' not in kwargs and len(args) == 0:
+                print('No defined group')
+                return
+            group = kwargs['group'] if 'group' in kwargs else args[0]
+            if group in allowed_groups:
+                func(*args, **kwargs)
+            else:
+                print('Group %s cant access this path' % group)
+
+        return wrapper
+
+    return decorator
 ```
+Worth mentioning that this can be to add cross cutting concerns in whatever framework.
+So it can be used to add security:
 
-Method `extractParams` is responsible for extraction possible configurations parameters from an Annotation.
+```python
+from server_poc import server
+from server_poc.examples.security.decorator import restricted_to
+from server_poc.server import route
 
-Methos check is responsible for check execution. 
-If it raises `SecurityException` the execution is interrupted.
- 
-Finalizing `Server`interface provide a configuration method `addSecurity` to connect Annotation with respetive Securitizable.
-Interface is repeated here for convenience:
 
-```java
-public interface Server {
-	void execute(String path, String... params);
+@route('/')
+def root():
+    print('Acessing root of Example')
 
-	void scan(Class<?> cls);
 
-	void addSecurity(Class<? extends Annotation> cls, Class<? extends Securitizable> sec);
-}
-```
+@route('/user', '/usr')
+@restricted_to('Admin')
+def user(group):
+    print('Accessing user of Example')
+    print('Group: ' + group)
 
-Once classes are mapped they are used to generate security objects and adding them to `Executor` instances:
 
-```java
-private void configureSecurity(Executor executor, Annotation[] annotations)
-        throws InstantiationException, IllegalAccessException {
-    for (Annotation a : annotations) {
-        Class<? extends Annotation> annotationType = a.annotationType();
-        if (securityMap.containsKey(annotationType)) {
-            Securitizable security = securityMap.get(annotationType).newInstance();
-            security.extracParams(a);
-            executor.add(security);
-        }
-    }
-}
-```
-
-The execution method now includes security checking:
-
-```java
-public void execute(String path, String... params) {
-    List<Object> list = new LinkedList<>();
-    for (String s : params) {
-        list.add(s);
-    }
-    try {
-        for (Securitizable s : securities) {
-            s.check(path, params);
-        }
-        // Executed only if each security doesn't throw Security Exception
-        method.invoke(target, list.toArray());
-    } catch (SecurityException e) {
-        e.printStackTrace();
-    } catch (Exception e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-        throw new RuntimeException("Errors in params");
-    }
-}
-```
-
-After all this architecture the extension point can be tested.
-First `RestrictTo` Annotation is created to define groups allowed to execute a method:
-
-```java
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface RestrictTo {
-	String[]value();
-}
-```
-
-Second the respective interface implementation:
- 
-```java
-public class RestrictToSecurity implements Securitizable {
-	private Set<String> allowedUsers = new HashSet<>();
-
-	@Override
-	public void check(String path, String... params) throws SecurityException {
-		if (params.length == 0) {
-			throw new SecurityException("No defined user");
-		}
-		String user = params[0];
-
-		if (!allowedUsers.contains(user)) {
-			throw new SecurityException("User " + user + " cant access this path");
-		}
-	}
-
-	@Override
-	public void extracParams(Annotation a) {
-		allowedUsers.addAll(Arrays.asList(((RestrictTo) a).value()));
-	}
-}
-```
-
-With those the example class can be modified to add security Annotation:
-
-```java
-public class SecurityExample {
-	@Route("/")
-	public void root() {
-		System.out.println("Acessing root of Example");
-	}
-
-	@RestrictTo("Admin")
-	@Route({ "/user", "/usr" })
-	public void user(String username) {
-		System.out.println("Acessing user of Example");
-		System.out.println("Username: " + username);
-	}
-}
-```
-
-Now the complete Server example can run with security:
-
-```java
-public static void main(String[] args) {
-    Server server = new ServerImpl();
-    // Configuring security
-    server.addSecurity(RestrictTo.class, RestrictToSecurity.class);
-    // Scan could be done by libs, but keeping it simple
-    server.scan(SecurityExample.class);
-    // Executing paths
-    server.execute("/");
-    server.execute("/user", "Admin");
-    server.execute("/usr", "Manager");
-    server.execute("/notexisting");
-}
-
-// Results:
-
+if __name__ == '__main__':
+    server.execute('/')
+    server.execute('/user', 'Manager')
+    server.execute('/usr', 'Admin')
+    server.execute('/user', group='Manager')
+    server.execute('/usr', group='Admin')
+    server.execute('/notexisting')
+    
+#Output
 Receiving Request on path: /
 Acessing root of Example
 Receiving Request on path: /user
-Acessing user of Example
-Username: Admin
+Group Manager cant access this path
 Receiving Request on path: /usr
-server.security.SecurityException: User Manager cant access this path
-	at server.examples.security.RestrictToSecurity.check(RestrictToSecurity.java:22)
-	at server.Executor.execute(ServerImpl.java:97)
-	at server.ServerImpl.execute(ServerImpl.java:24)
-	at server.examples.security.SecurityMain.main(SecurityMain.java:16)
+Accessing user of Example
+Group: Admin
+Receiving Request on path: /user
+Group Manager cant access this path
+Receiving Request on path: /usr
+Accessing user of Example
+Group: Admin
 Receiving Request on path: /notexisting
-404: Page not Found
+404 page not Found
 ```
-
-Thus the mocro framework is completing showing the use of Annotations to add extension points.
-Methods are been routed and security is properly configured using this kind of metadata.
+The last thing its important notice is that decorator order matters.
+Once they are applied down to up 
 
 # Conclusion
 
