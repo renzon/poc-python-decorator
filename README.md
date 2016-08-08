@@ -298,7 +298,37 @@ Receiving Request on path: /notexisting
 404 page not Found
 ```
 The last thing its important notice is that decorator order matters.
-Once they are applied down to up 
+Once they are applied down to up, unwanted behavior can occur.
+For example changing `route` and `restrict_to` decorators:
+
+```python
+
+@restricted_to('Admin')
+@route('/user', '/usr')
+def user(group):
+    print('Accessing user of Example')
+    print('Group: ' + group)
+
+
+# Output
+
+Receiving Request on path: /user
+Accessing user of Example
+Group: Manager
+Receiving Request on path: /usr
+Accessing user of Example
+Group: Admin
+Receiving Request on path: /user
+Accessing user of Example
+Group: Manager
+Receiving Request on path: /usr
+Accessing user of Example
+Group: Admin
+```
+
+So in this case `route` would map an unsecured function which can be dangerous.
+It would be possible checking routed function before applying security.
+But this is out of scope of this project.
 
 # Conclusion
 
@@ -315,8 +345,8 @@ Unrestricted params        | Yes                              | No, can't define
 Param keep code simple     | No, extra level of function      | Yes, only add attribute call
 Exec. independent of order | No                               | Yes
 Keep target integrety      | No, need fix with wraps          | Yes
-# of methods \*            | | 10
-Lines of Code \*\*         | | 187
+# of methods/functions \*  | 3                                | 10
+Lines of Code \*\*         | 40                               | 187
 
 \* Counted only for framework. Discarded Java Interfaces. 
 
