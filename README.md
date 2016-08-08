@@ -350,7 +350,7 @@ Lines of Code \*\*         | 40                               | 187
 
 \* Counted only for framework. Discarded Java Interfaces. 
 
-\*\* Counted only for framwork. Interfaces included
+\*\* Counted only for framework. Interfaces included
 
 The above the table is construct so "Yes" answer is positive and "No' negative.
 So my personal conclusion is that Python Decorator is simpler than Java Annotation.
