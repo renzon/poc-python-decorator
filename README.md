@@ -8,7 +8,7 @@ This project is using Python 3.5.
 
 ## Case 1: Decorator which does nothing
 
-(Java Case 1: Annotation which does nothing)[https://github.com/renzon/poc-java-annotation#case-1-annotation-which-does-nothing]
+[Java Case 1: Annotation which does nothing](https://github.com/renzon/poc-java-annotation#case-1-annotation-which-does-nothing)
 
 Let's suppose the need for marking methods and only listing their names, without execution.
 A Decorator can be used for that. 
