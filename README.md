@@ -1,9 +1,14 @@
 # poc-python-decorator
-Project to Analyse Java Annotation and compare it with Python Decorator
+Project to Analyse Java Annotation and compare it with Python Decorator.
+See tha Java counterpart in 
+[poc-java-annotation](https://github.com/renzon/poc-java-annotation#poc-java-annotation).
+Each following session has also links to their counterparts.
 
-This project is using Python 3.5
+This project is using Python 3.5.
 
 ## Case 1: Decorator which does nothing
+
+(Java Case 1: Annotation which does nothing)[https://github.com/renzon/poc-java-annotation#case-1-annotation-which-does-nothing]
 
 Let's suppose the need for marking methods and only listing their names.
 A Decorator can be used for that. 
@@ -88,7 +93,11 @@ Marked 2
 Not Marked
 ```
 
-## Case 2: Annotation which does something
+(Java Case 1: Annotation which does nothing)[https://github.com/renzon/poc-java-annotation#case-1-annotation-which-does-nothing]
+
+## Case 2: Decorator which does something
+
+(Case 2: Annotation which does something)[https://github.com/renzon/poc-java-annotation#case-2-annotation-which-does-something]
 
 A micro framework to measure functions running time can be accomplished using previous approach.
 The difference is that Decorator return now need to be another function.
@@ -166,13 +175,15 @@ def timing(func):
 
 So the output now show the original function name:
 
-``
+```
 997
 998
 999
 Function count executed in 0.002604999999999996 ms
 count
 ```
+
+(Case 2: Annotation which does something)[https://github.com/renzon/poc-java-annotation#case-2-annotation-which-does-something]
 
 # Decorator Framework
 
@@ -181,6 +192,8 @@ So a Proof of Concept will be implemented to illustrate this.
 Thus a simple version of server routing and security is going to be developed on next sections.
 
 ## Receiving parameters
+
+(Receiving parameters)[]
 
 Routing configuration is a common problem that every web framework must deal with.
 Some of them use Decorator to configure paths to which a method should respond.
@@ -345,7 +358,7 @@ Unrestricted params        | Yes                              | No, can't define
 Param keep code simple     | No, extra level of function      | Yes, only add attribute call
 Exec. independent of order | No                               | Yes
 Keep target integrety      | No, need fix with wraps          | Yes
-# of methods/functions \*  | 3                                | 10
+## of methods/functions \* | 3                                | 10
 Lines of Code \*\*         | 40                               | 187
 
 \* Counted only for framework. Discarded Java Interfaces. 
